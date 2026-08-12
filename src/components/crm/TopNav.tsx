@@ -26,7 +26,7 @@ export function TopNav({ hideSidebarTrigger = false }: { hideSidebarTrigger?: bo
 
   function handleLogout() {
     clearSession();
-    navigate({ to: "/login", replace: true });
+    navigate({ to: "/inventory", search: { tab: "dashboard" }, replace: true } as any);
   }
 
   return (

@@ -70,7 +70,7 @@ function NavGroup({
                     tooltip={item.title}
                     className="h-10 rounded-lg data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:font-semibold data-[active=true]:hover:bg-primary data-[active=true]:hover:text-primary-foreground"
                   >
-                    <Link to={item.url}>
+                    <Link to="/inventory" search={{ tab: 'dashboard' }}>
                       {!collapsed && <span className="h-px w-2.5 shrink-0 bg-current opacity-30" />}
                       <item.icon className="h-[18px] w-[18px]" />
                       <span className="font-medium">{item.title}</span>
@@ -95,7 +95,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader className="px-4 py-5">
-        <Link to="/inventory" className="flex items-center gap-3">
+        <Link to="/inventory" search={{ tab: "dashboard" }} className="flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground shadow-soft">
             <Leaf className="h-5 w-5" />
           </div>

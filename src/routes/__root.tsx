@@ -123,41 +123,8 @@ function RootComponent() {
   const lastTrackedPath = useRef<string>("");
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Require a logged-in session for every page except /login
+  // Auth check for standalone Inventory app
   useEffect(() => {
-    if (pathname === "/login") {
-      setAuthChecked(true);
-      return;
-    }
-    const session = getSession();
-    if (!session) {
-      navigate({ to: "/login", replace: true });
-      return;
-    }
-    // Customers can only access their own customer detail / payments page
-    if (session.role === ("Customer" as string)) {
-      const allowedPrefix = `/customers/${session.id}`;
-      if (!pathname.startsWith(allowedPrefix)) {
-        navigate({ to: "/customers/$id", params: { id: session.id }, replace: true });
-        return;
-      }
-    }
-    // Only Admin Staff can access Employees / Employee Activity
-    if (
-      session.role !== "Admin Staff" &&
-      (pathname.startsWith("/employees") || pathname.startsWith("/employee-activity"))
-    ) {
-      navigate({ to: "/", replace: true });
-      return;
-    }
-    // Field Staff (Action / Service) can only access their customer tasks pages
-    if (
-      (session.role === "Action Staff" || session.role === "Service Staff") &&
-      !pathname.startsWith("/field-customers")
-    ) {
-      navigate({ to: "/field-customers", replace: true });
-      return;
-    }
     setAuthChecked(true);
   }, [pathname, navigate]);
 
