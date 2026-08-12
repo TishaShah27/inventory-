@@ -27,19 +27,10 @@ function OutwardDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
 
-  const { data: allEntries = [] } = useQuery({
-    queryKey: ["outwardEntries"],
-    queryFn: fetchOutwardEntries,
-  });
+  const { data: allEntries = [] } = useQuery({ queryKey: ["outwardEntries"], queryFn: fetchOutwardEntries });
   const { data: inventoryData } = useQuery({ queryKey: ["inventory"], queryFn: fetchAllInventory });
-  const { data: b2bPartners = [] } = useQuery({
-    queryKey: ["b2bPartners"],
-    queryFn: fetchB2bPartners,
-  });
-  const { data: installerPartners = [] } = useQuery({
-    queryKey: ["installerPartners"],
-    queryFn: fetchInstallerPartners,
-  });
+  const { data: b2bPartners = [] } = useQuery({ queryKey: ["b2bPartners"], queryFn: fetchB2bPartners });
+  const { data: installerPartners = [] } = useQuery({ queryKey: ["installerPartners"], queryFn: fetchInstallerPartners });
   const { data: customers = [] } = useQuery({ queryKey: ["customers"], queryFn: fetchCustomers });
 
   const subs = inventoryData?.subs ?? [];
@@ -47,19 +38,12 @@ function OutwardDetailPage() {
   const groups = inventoryData?.groups ?? [];
   const masters = inventoryData?.masters ?? [];
 
-  // Find anchor entry by id, then group all entries with same billNumber (one challan = one outward batch)
   const anchor = allEntries.find((e) => e.id === id);
   const billNumber = anchor?.billNumber ?? "";
-  const entries = allEntries.filter((e) => e.billNumber === billNumber);
+  const entries = allEntries.filter((e) => e.outwardId === (anchor?.outwardId ?? ""));
 
-  const deliveryTo = anchor?.deliveryTo ?? "B2B";
-  const partnerName = anchor?.b2bCompanyName ?? "";
-  const partner =
-    deliveryTo === "B2I"
-      ? installerPartners.find((p) => p.companyName === partnerName)
-      : deliveryTo === "B2B"
-        ? b2bPartners.find((p) => p.companyName === partnerName)
-        : customers.find((c) => c.name === partnerName);
+  const deliveryTo = anchor?.deliveryTo ?? "BUYER";
+  const partnerName = anchor?.deliveryPartner ?? "";
 
   function getChain(subcategoryId: string) {
     const sub = subs.find((s) => s.id === subcategoryId);
@@ -85,14 +69,14 @@ function OutwardDetailPage() {
   }
 
   const partnerLabel =
-    deliveryTo === "B2I"
-      ? "Installer Partner Details"
-      : deliveryTo === "B2C"
-        ? "B2C Customer Details"
-        : "B2B Partner Details";
+    deliveryTo === "SELLER"
+      ? "Seller Details"
+      : deliveryTo === "CUSTOMER"
+      ? "Customer Details"
+      : "Buyer Details";
 
   const partnerFields = [
-    [deliveryTo === "B2C" ? "Customer Name" : "Company Name", partnerName || "—"],
+    [deliveryTo === "CUSTOMER" ? "Customer Name" : "Company Name", partnerName || "—"],
     ["Contact", anchor.deliveryContact || (partner as any)?.contact || "—"],
     ["GST Number", anchor.gstDetails || (partner as any)?.gstin || "—"],
     ["Address", anchor.customerAddress || (partner as any)?.address || "—"],
@@ -149,7 +133,13 @@ function OutwardDetailPage() {
               Outward Entry Type
             </p>
             <p className="mt-0.5 text-xl font-bold text-white">
-              {deliveryTo === "B2I" ? "INSTALLER" : deliveryTo}
+              {deliveryTo === "SELLER"
+                ? "SELLER"
+                : deliveryTo === "BUYER"
+                ? "BUYER"
+                : deliveryTo === "CUSTOMER"
+                ? "CUSTOMER"
+                : deliveryTo}
             </p>
           </div>
           <div className="text-right">

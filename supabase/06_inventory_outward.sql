@@ -8,7 +8,7 @@ create table if not exists inventory_outward (
   challan_date     text        not null default '',
   bill_number      text        not null default '',
   concerned_person text        not null default '',
-  delivery_to      text        not null default 'B2C',
+  delivery_to      text        not null default 'CUSTOMER',
   b2b_company_name text,
   customer_address text        not null default '',
   delivery_city    text        not null default '',

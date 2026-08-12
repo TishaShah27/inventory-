@@ -32,9 +32,6 @@ const GST_RATES = [5, 12, 18, 28];
 type SerialMode = "scan" | "manual" | "multiple";
 type MatLine = {
   id: string;
-  masterId: string;
-  groupId: string;
-  catId: string;
   subId: string;
   qty: number;
   gstPct: number;
@@ -54,15 +51,9 @@ function defaultLine(
   cats: ReturnType<typeof getCats>,
   subs: ReturnType<typeof getSubs>,
 ): MatLine {
-  const m = masters[0]?.id ?? "";
-  const g = groups.find((x) => x.masterId === m)?.id ?? "";
-  const c = cats.find((x) => x.groupId === g)?.id ?? "";
-  const s = subs.find((x) => x.categoryId === c)?.id ?? "";
+  const s = subs[0]?.id ?? "";
   return {
     id: uid(),
-    masterId: m,
-    groupId: g,
-    catId: c,
     subId: s,
     qty: 1,
     gstPct: 18,
@@ -344,80 +335,15 @@ function NewInwardPage() {
                       </div>
 
                       {/* Row 1: Master · Group · Category · Subcategory */}
-                      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground">
-                            Master
-                          </label>
-                          <select
-                            value={line.masterId}
-                            onChange={(e) => {
-                              const m = e.target.value;
-                              const g = groups.find((x) => x.masterId === m)?.id ?? "";
-                              const c = cats.find((x) => x.groupId === g)?.id ?? "";
-                              const s = subs.find((x) => x.categoryId === c)?.id ?? "";
-                              updateLine(line.id, { masterId: m, groupId: g, catId: c, subId: s });
-                            }}
-                            className={selectCls + " text-[12px]"}
-                          >
-                            {masters.map((m) => (
-                              <option key={m.id} value={m.id}>
-                                {m.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground">
-                            Group
-                          </label>
-                          <select
-                            value={line.groupId}
-                            onChange={(e) => {
-                              const g = e.target.value;
-                              const c = cats.find((x) => x.groupId === g)?.id ?? "";
-                              const s = subs.find((x) => x.categoryId === c)?.id ?? "";
-                              updateLine(line.id, { groupId: g, catId: c, subId: s });
-                            }}
-                            className={selectCls + " text-[12px]"}
-                          >
-                            {grpsForMaster.map((g) => (
-                              <option key={g.id} value={g.id}>
-                                {g.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground">
-                            Category
-                          </label>
-                          <select
-                            value={line.catId}
-                            onChange={(e) => {
-                              const c = e.target.value;
-                              const s = subs.find((x) => x.categoryId === c)?.id ?? "";
-                              updateLine(line.id, { catId: c, subId: s });
-                            }}
-                            className={selectCls + " text-[12px]"}
-                          >
-                            {ctsForGrp.map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground">
-                            Subcategory
-                          </label>
+                      <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
+                        <div className="space-y-1 lg:col-span-2">
+                          <label className="text-[10px] font-bold uppercase text-muted-foreground">Product</label>
                           <select
                             value={line.subId}
                             onChange={(e) => updateLine(line.id, { subId: e.target.value })}
                             className={selectCls + " text-[12px]"}
                           >
-                            {subsForCat.map((s) => (
+                            {subs.map((s) => (
                               <option key={s.id} value={s.id}>
                                 {s.name}
                               </option>
@@ -427,21 +353,27 @@ function NewInwardPage() {
                       </div>
 
                       {/* Row 2: Qty · GST% · Price · GST Amt */}
-                      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground">
-                            Quantity ({unit})
-                          </label>
-                          <input
-                            type="number"
-                            min={1}
-                            value={line.qty}
-                            onChange={(e) =>
-                              updateLine(line.id, { qty: Math.max(1, Number(e.target.value)) })
-                            }
-                            className={inputCls + " text-[12px]"}
-                          />
-                        </div>
+                          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase text-muted-foreground">
+                                Quantity ({(() => {
+                                  const lineSub = subs.find((s) => s.id === line.subId);
+                                  const cat = cats.find((c) => c.id === lineSub?.categoryId);
+                                  const grp = groups.find((g) => g.id === cat?.groupId);
+                                  const master = masters.find((m) => m.id === grp?.masterId);
+                                  return master?.unit ?? "pcs";
+                                })()})
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                value={line.qty}
+                                onChange={(e) =>
+                                  updateLine(line.id, { qty: Math.max(1, Number(e.target.value)) })
+                                }
+                                className={inputCls + " text-[12px]"}
+                              />
+                            </div>
                         <div className="space-y-1">
                           <label className="text-[10px] font-bold uppercase text-muted-foreground">
                             GST Percentage

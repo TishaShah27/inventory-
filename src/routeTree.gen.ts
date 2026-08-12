@@ -20,6 +20,7 @@ import { Route as StoreInstallerAddRouteImport } from './routes/store_.installer
 import { Route as StoreInstallerIdRouteImport } from './routes/store_.installer.$id'
 import { Route as StoreB2bAddRouteImport } from './routes/store_.b2b.add'
 import { Route as StoreB2bIdRouteImport } from './routes/store_.b2b.$id'
+import { Route as InventoryProductNewRouteImport } from './routes/inventory_.product.new'
 import { Route as InventoryOutwardNewRouteImport } from './routes/inventory_.outward.new'
 import { Route as InventoryOutwardIdRouteImport } from './routes/inventory_.outward.$id'
 import { Route as InventoryInwardNewRouteImport } from './routes/inventory_.inward.new'
@@ -84,6 +85,11 @@ const StoreB2bIdRoute = StoreB2bIdRouteImport.update({
   path: '/store/b2b/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InventoryProductNewRoute = InventoryProductNewRouteImport.update({
+  id: '/inventory_/product/new',
+  path: '/inventory/product/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InventoryOutwardNewRoute = InventoryOutwardNewRouteImport.update({
   id: '/inventory_/outward/new',
   path: '/inventory/outward/new',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/inventory/inward/new': typeof InventoryInwardNewRoute
   '/inventory/outward/$id': typeof InventoryOutwardIdRoute
   '/inventory/outward/new': typeof InventoryOutwardNewRoute
+  '/inventory/product/new': typeof InventoryProductNewRoute
   '/store/b2b/$id': typeof StoreB2bIdRoute
   '/store/b2b/add': typeof StoreB2bAddRoute
   '/store/installer/$id': typeof StoreInstallerIdRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/inventory/inward/new': typeof InventoryInwardNewRoute
   '/inventory/outward/$id': typeof InventoryOutwardIdRoute
   '/inventory/outward/new': typeof InventoryOutwardNewRoute
+  '/inventory/product/new': typeof InventoryProductNewRoute
   '/store/b2b/$id': typeof StoreB2bIdRoute
   '/store/b2b/add': typeof StoreB2bAddRoute
   '/store/installer/$id': typeof StoreInstallerIdRoute
@@ -180,6 +188,7 @@ export interface FileRoutesById {
   '/inventory_/inward/new': typeof InventoryInwardNewRoute
   '/inventory_/outward/$id': typeof InventoryOutwardIdRoute
   '/inventory_/outward/new': typeof InventoryOutwardNewRoute
+  '/inventory_/product/new': typeof InventoryProductNewRoute
   '/store_/b2b/$id': typeof StoreB2bIdRoute
   '/store_/b2b/add': typeof StoreB2bAddRoute
   '/store_/installer/$id': typeof StoreInstallerIdRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
     | '/inventory/inward/new'
     | '/inventory/outward/$id'
     | '/inventory/outward/new'
+    | '/inventory/product/new'
     | '/store/b2b/$id'
     | '/store/b2b/add'
     | '/store/installer/$id'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/inventory/inward/new'
     | '/inventory/outward/$id'
     | '/inventory/outward/new'
+    | '/inventory/product/new'
     | '/store/b2b/$id'
     | '/store/b2b/add'
     | '/store/installer/$id'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/inventory_/inward/new'
     | '/inventory_/outward/$id'
     | '/inventory_/outward/new'
+    | '/inventory_/product/new'
     | '/store_/b2b/$id'
     | '/store_/b2b/add'
     | '/store_/installer/$id'
@@ -267,6 +279,7 @@ export interface RootRouteChildren {
   InventoryInwardNewRoute: typeof InventoryInwardNewRoute
   InventoryOutwardIdRoute: typeof InventoryOutwardIdRoute
   InventoryOutwardNewRoute: typeof InventoryOutwardNewRoute
+  InventoryProductNewRoute: typeof InventoryProductNewRoute
   StoreB2bIdRoute: typeof StoreB2bIdRoute
   StoreB2bAddRoute: typeof StoreB2bAddRoute
   StoreInstallerIdRoute: typeof StoreInstallerIdRoute
@@ -356,6 +369,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreB2bIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inventory_/product/new': {
+      id: '/inventory_/product/new'
+      path: '/inventory/product/new'
+      fullPath: '/inventory/product/new'
+      preLoaderRoute: typeof InventoryProductNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/inventory_/outward/new': {
       id: '/inventory_/outward/new'
       path: '/inventory/outward/new'
@@ -427,6 +447,7 @@ const rootRouteChildren: RootRouteChildren = {
   InventoryInwardNewRoute: InventoryInwardNewRoute,
   InventoryOutwardIdRoute: InventoryOutwardIdRoute,
   InventoryOutwardNewRoute: InventoryOutwardNewRoute,
+  InventoryProductNewRoute: InventoryProductNewRoute,
   StoreB2bIdRoute: StoreB2bIdRoute,
   StoreB2bAddRoute: StoreB2bAddRoute,
   StoreInstallerIdRoute: StoreInstallerIdRoute,

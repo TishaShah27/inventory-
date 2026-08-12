@@ -158,39 +158,11 @@ function StoreInwardDetailPage() {
         </div>
       </motion.div>
 
-      {/* Supplier Details */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, delay: 0.05 }}
-        className="rounded-2xl border bg-card shadow-card overflow-hidden"
-      >
-        <div className="flex items-center gap-2.5 border-b bg-muted/40 px-5 py-3">
-          <Building2 className="h-4 w-4 text-primary" />
-          <span className="text-[12px] font-bold uppercase tracking-wide text-foreground">
-            Material Supplier Details
-          </span>
-        </div>
-        <div className="grid grid-cols-2 gap-0 sm:grid-cols-3">
-          {supplierFields.map(([label, value], i) => (
-            <div
-              key={label}
-              className={`px-5 py-4 ${i !== supplierFields.length - 1 ? "border-b sm:border-b-0 sm:border-r" : ""} ${Math.floor(i / 3) < Math.floor((supplierFields.length - 1) / 3) ? "sm:border-b" : ""}`}
-            >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                {label}
-              </p>
-              <p className="text-[13px] font-semibold text-foreground">{value}</p>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-
       {/* Materials Table */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, delay: 0.1 }}
+        transition={{ duration: 0.2, delay: 0.15 }}
         className="rounded-2xl border bg-card shadow-card overflow-hidden"
       >
         <div className="flex items-center gap-2.5 border-b bg-muted/40 px-5 py-3">
@@ -207,10 +179,7 @@ function StoreInwardDetailPage() {
             <thead>
               <tr className="border-b bg-muted/20">
                 {[
-                  "Master",
-                  "Group / Brand",
-                  "Category",
-                  "Sub Category",
+                  "Product",
                   "Qty",
                   "Price/Unit",
                   "GST %",
@@ -236,23 +205,11 @@ function StoreInwardDetailPage() {
                     key={e.id}
                     className={`border-b transition-colors hover:bg-primary-soft/10 ${i % 2 !== 0 ? "bg-muted/5" : ""}`}
                   >
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center rounded-full gradient-primary px-3 py-1 text-[10px] font-bold text-white whitespace-nowrap">
-                        {master?.name ?? "—"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-[12px] font-semibold whitespace-nowrap">
-                      {grp?.name ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-                      {cat?.name ?? "—"}
-                    </td>
                     <td className="px-4 py-3 text-[12px] font-semibold whitespace-nowrap">
                       {sub?.name ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-[12px] font-bold whitespace-nowrap">
-                      {e.qty}{" "}
-                      <span className="text-muted-foreground font-normal">{master?.unit}</span>
+                      {e.qty} <span className="text-muted-foreground font-normal">{master?.unit}</span>
                     </td>
                     <td className="px-4 py-3 font-mono text-[12px] whitespace-nowrap">
                       ₹{e.price.toLocaleString("en-IN")}

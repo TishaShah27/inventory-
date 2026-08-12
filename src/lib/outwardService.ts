@@ -9,7 +9,7 @@ function fromDB(row: any): OutwardEntry {
     challanDate: row.challan_date ?? "",
     billNumber: row.bill_number ?? "",
     concernedPerson: row.concerned_person ?? "",
-    deliveryTo: row.delivery_to ?? "B2C",
+    deliveryTo: row.delivery_to ?? "CUSTOMER",
     b2bCompanyName: row.b2b_company_name ?? undefined,
     customerAddress: row.customer_address ?? "",
     deliveryCity: row.delivery_city ?? "",

@@ -38,14 +38,11 @@ const CONCERNED_PERSONS = [
   "Priya Singh",
 ];
 
-type DeliveryTo = "B2B" | "B2C" | "B2I";
+type DeliveryTo = "BUYER" | "CUSTOMER" | "SELLER";
 type SerialMode = "scan" | "manual" | "multiple";
 
 type MatLine = {
   id: string;
-  masterId: string;
-  groupId: string;
-  catId: string;
   subId: string;
   qty: number;
   serialMode: SerialMode;
@@ -63,15 +60,9 @@ function defaultLine(
   cats: ReturnType<typeof getCats>,
   subs: ReturnType<typeof getSubs>,
 ): MatLine {
-  const m = masters[0]?.id ?? "";
-  const g = groups.find((x) => x.masterId === m)?.id ?? "";
-  const c = cats.find((x) => x.groupId === g)?.id ?? "";
-  const s = subs.find((x) => x.categoryId === c)?.id ?? "";
+  const s = subs[0]?.id ?? "";
   return {
     id: uid(),
-    masterId: m,
-    groupId: g,
-    catId: c,
     subId: s,
     qty: 1,
     serialMode: "scan",
@@ -115,7 +106,7 @@ function NewOutwardPage() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [deliveryTo, setDeliveryTo] = useState<DeliveryTo>("B2B");
+  const [deliveryTo, setDeliveryTo] = useState<DeliveryTo>("BUYER");
   const [challanDate, setChallanDate] = useState(today);
   const [billNumber, setBillNumber] = useState("");
   const [concernedPerson, setConcernedPerson] = useState("");
@@ -128,11 +119,11 @@ function NewOutwardPage() {
     setSameAsAbove(false);
   }
 
-  const b2bData = deliveryTo === "B2B" ? b2bPartners.find((p) => p.id === selectedId) : undefined;
+  const b2bData = deliveryTo === "BUYER" ? b2bPartners.find((p) => p.id === selectedId) : undefined;
   const installerData =
-    deliveryTo === "B2I" ? installerPartners.find((p) => p.id === selectedId) : undefined;
+    deliveryTo === "SELLER" ? installerPartners.find((p) => p.id === selectedId) : undefined;
   const customerData =
-    deliveryTo === "B2C" ? customers.find((c) => String(c.id) === selectedId) : undefined;
+    deliveryTo === "CUSTOMER" ? customers.find((c) => String(c.id) === selectedId) : undefined;
 
   const [custAddress, setCustAddress] = useState("");
   const [deliveryCity, setDeliveryCity] = useState("");
@@ -159,7 +150,7 @@ function NewOutwardPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const needsSelection = deliveryTo === "B2B" || deliveryTo === "B2I" || deliveryTo === "B2C";
+  const needsSelection = deliveryTo === "BUYER" || deliveryTo === "SELLER" || deliveryTo === "CUSTOMER";
   const canSubmit =
     billNumber.trim() &&
     concernedPerson &&
@@ -177,7 +168,7 @@ function NewOutwardPage() {
     setSaving(true);
     setSaveError(null);
     try {
-      const supplierType: "b2b" | "b2i" = deliveryTo === "B2I" ? "b2i" : "b2b";
+      const supplierType: "b2b" | "b2i" = deliveryTo === "SELLER" ? "b2i" : "b2b";
       for (const line of lines) {
         await createOutwardEntry(
           {
@@ -262,7 +253,7 @@ function NewOutwardPage() {
                 <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground shrink-0">
                   Delivery To <span className="text-red-500">*</span>
                 </label>
-                {(["B2B", "B2C", "B2I"] as DeliveryTo[]).map((opt) => (
+                {(["BUYER", "CUSTOMER", "SELLER"] as DeliveryTo[]).map((opt) => (
                   <label key={opt} className="flex cursor-pointer items-center gap-1">
                     <div
                       onClick={() => changeDeliveryTo(opt)}
@@ -275,7 +266,7 @@ function NewOutwardPage() {
                     <span
                       className={`text-[11px] font-semibold ${deliveryTo === opt ? "text-primary" : "text-muted-foreground"}`}
                     >
-                      {opt === "B2I" ? "INSTALLER" : opt}
+                      {opt === "SELLER" ? "SELLER" : opt}
                     </span>
                   </label>
                 ))}
@@ -286,25 +277,25 @@ function NewOutwardPage() {
                 className={selectCls}
               >
                 <option value="">
-                  {deliveryTo === "B2B"
-                    ? "Select B2B…"
-                    : deliveryTo === "B2I"
-                      ? "Select Installer Dealer…"
+                  {deliveryTo === "BUYER"
+                    ? "Select Buyer…"
+                    : deliveryTo === "SELLER"
+                      ? "Select Seller…"
                       : "Select Customer…"}
                 </option>
-                {deliveryTo === "B2B" &&
+                {deliveryTo === "BUYER" &&
                   b2bPartners.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.companyName}
                     </option>
                   ))}
-                {deliveryTo === "B2I" &&
+                {deliveryTo === "SELLER" &&
                   installerPartners.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.companyName}
                     </option>
                   ))}
-                {deliveryTo === "B2C" &&
+                {deliveryTo === "CUSTOMER" &&
                   customers.map((c) => (
                     <option key={c.id} value={String(c.id)}>
                       {c.name} — {c.city}
@@ -549,95 +540,33 @@ function NewOutwardPage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                      Master
-                    </label>
-                    <select
-                      value={line.masterId}
-                      onChange={(e) => {
-                        const m = e.target.value;
-                        const g = groups.find((x) => x.masterId === m)?.id ?? "";
-                        const c = cats.find((x) => x.groupId === g)?.id ?? "";
-                        const s = subs.find((x) => x.categoryId === c)?.id ?? "";
-                        updateLine(line.id, { masterId: m, groupId: g, catId: c, subId: s });
-                      }}
-                      className={selectCls}
-                    >
-                      {masters.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name.toUpperCase()}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                      Group
-                    </label>
-                    <select
-                      value={line.groupId}
-                      onChange={(e) => {
-                        const g = e.target.value;
-                        const c = cats.find((x) => x.groupId === g)?.id ?? "";
-                        const s = subs.find((x) => x.categoryId === c)?.id ?? "";
-                        updateLine(line.id, { groupId: g, catId: c, subId: s });
-                      }}
-                      className={selectCls}
-                    >
-                      <option value="">Select Group</option>
-                      {grpsForMaster.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                      Category
-                    </label>
-                    <select
-                      value={line.catId}
-                      onChange={(e) => {
-                        const c = e.target.value;
-                        const s = subs.find((x) => x.categoryId === c)?.id ?? "";
-                        updateLine(line.id, { catId: c, subId: s });
-                      }}
-                      className={selectCls}
-                    >
-                      <option value="">Select</option>
-                      {ctsForGrp.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                      SubCategory
-                    </label>
-                    <select
-                      value={line.subId}
-                      onChange={(e) => updateLine(line.id, { subId: e.target.value })}
-                      className={selectCls}
-                    >
-                      <option value="">Select Sub-Category</option>
-                      {subsForCat.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                    <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
+                      <div className="space-y-1 lg:col-span-2">
+                        <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Product</label>
+                        <select
+                          value={line.subId}
+                          onChange={(e) => updateLine(line.id, { subId: e.target.value })}
+                          className={selectCls}
+                        >
+                          {subs.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                      Quantity ({unit})
+                      Quantity ({(() => {
+                        const lineSub = subs.find((s) => s.id === line.subId);
+                        const cat = cats.find((c) => c.id === lineSub?.categoryId);
+                        const grp = groups.find((g) => g.id === cat?.groupId);
+                        const master = masters.find((m) => m.id === grp?.masterId);
+                        return master?.unit ?? "pcs";
+                      })()})
                     </label>
                     <input
                       type="number"

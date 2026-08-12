@@ -38,7 +38,7 @@ const CONCERNED_PERSONS = [
   "Priya Singh",
 ];
 
-type DeliveryTo = "B2B" | "B2C" | "B2I";
+type DeliveryTo = "BUYER" | "CUSTOMER" | "SELLER";
 type SerialMode = "scan" | "manual" | "multiple";
 
 type MatLine = {
@@ -115,7 +115,7 @@ function StoreNewOutwardPage() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [deliveryTo, setDeliveryTo] = useState<DeliveryTo>("B2B");
+  const [deliveryTo, setDeliveryTo] = useState<DeliveryTo>("BUYER");
   const [challanDate, setChallanDate] = useState(today);
   const [billNumber, setBillNumber] = useState("");
   const [concernedPerson, setConcernedPerson] = useState("");
@@ -128,11 +128,11 @@ function StoreNewOutwardPage() {
     setSameAsAbove(false);
   }
 
-  const b2bData = deliveryTo === "B2B" ? b2bPartners.find((p) => p.id === selectedId) : undefined;
+  const b2bData = deliveryTo === "BUYER" ? b2bPartners.find((p) => p.id === selectedId) : undefined;
   const installerData =
-    deliveryTo === "B2I" ? installerPartners.find((p) => p.id === selectedId) : undefined;
+    deliveryTo === "SELLER" ? installerPartners.find((p) => p.id === selectedId) : undefined;
   const customerData =
-    deliveryTo === "B2C" ? customers.find((c) => String(c.id) === selectedId) : undefined;
+    deliveryTo === "CUSTOMER" ? customers.find((c) => String(c.id) === selectedId) : undefined;
 
   const [custAddress, setCustAddress] = useState("");
   const [deliveryCity, setDeliveryCity] = useState("");
@@ -159,7 +159,7 @@ function StoreNewOutwardPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const needsSelection = deliveryTo === "B2B" || deliveryTo === "B2I" || deliveryTo === "B2C";
+  const needsSelection = deliveryTo === "BUYER" || deliveryTo === "SELLER" || deliveryTo === "CUSTOMER";
   const canSubmit =
     billNumber.trim() &&
     concernedPerson &&
@@ -177,7 +177,7 @@ function StoreNewOutwardPage() {
     setSaving(true);
     setSaveError(null);
     try {
-      const supplierType: "b2b" | "b2i" = deliveryTo === "B2I" ? "b2i" : "b2b";
+      const supplierType: "b2b" | "b2i" = deliveryTo === "SELLER" ? "b2i" : "b2b";
       for (const line of lines) {
         await createOutwardEntry(
           {
@@ -262,7 +262,7 @@ function StoreNewOutwardPage() {
                 <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground shrink-0">
                   Delivery To <span className="text-red-500">*</span>
                 </label>
-                {(["B2B", "B2C", "B2I"] as DeliveryTo[]).map((opt) => (
+                {(["BUYER", "CUSTOMER", "SELLER"] as DeliveryTo[]).map((opt) => (
                   <label key={opt} className="flex cursor-pointer items-center gap-1">
                     <div
                       onClick={() => changeDeliveryTo(opt)}
@@ -275,7 +275,7 @@ function StoreNewOutwardPage() {
                     <span
                       className={`text-[11px] font-semibold ${deliveryTo === opt ? "text-primary" : "text-muted-foreground"}`}
                     >
-                      {opt === "B2I" ? "INSTALLER" : opt}
+                      {opt === "SELLER" ? "SELLER" : opt}
                     </span>
                   </label>
                 ))}
@@ -286,25 +286,25 @@ function StoreNewOutwardPage() {
                 className={selectCls}
               >
                 <option value="">
-                  {deliveryTo === "B2B"
-                    ? "Select B2B…"
-                    : deliveryTo === "B2I"
-                      ? "Select Installer Dealer…"
+                  {deliveryTo === "BUYER"
+                    ? "Select Buyer…"
+                    : deliveryTo === "SELLER"
+                      ? "Select Seller…"
                       : "Select Customer…"}
                 </option>
-                {deliveryTo === "B2B" &&
+                {deliveryTo === "BUYER" &&
                   b2bPartners.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.companyName}
                     </option>
                   ))}
-                {deliveryTo === "B2I" &&
+                {deliveryTo === "SELLER" &&
                   installerPartners.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.companyName}
                     </option>
                   ))}
-                {deliveryTo === "B2C" &&
+                {deliveryTo === "CUSTOMER" &&
                   customers.map((c) => (
                     <option key={c.id} value={String(c.id)}>
                       {c.name} — {c.city}

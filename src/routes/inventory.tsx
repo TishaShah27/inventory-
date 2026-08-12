@@ -3391,7 +3391,7 @@ function OutwardTab({
                     { value: "__all__", label: "All" },
                     ...deliveryToOptions.map((dt) => ({
                       value: dt,
-                      label: dt === "B2I" ? "Seller" : dt,
+                      label: dt === "SELLER" ? "Seller" : dt,
                     })),
                   ]}
                 />
