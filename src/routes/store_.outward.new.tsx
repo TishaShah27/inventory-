@@ -10,6 +10,8 @@ import {
   getGroups,
   getCats,
   getSubs,
+  getB2bPartners,
+  getInstallerPartners,
   addMovement,
   subscribe,
 } from "@/data/inventoryStore";
@@ -102,12 +104,12 @@ function StoreNewOutwardPage() {
   });
   const liveSubs = liveInventory?.subs ?? [];
 
-  const [b2bPartners, setB2bPartners] = useState<B2bPartner[]>([]);
-  const [installerPartners, setInstallerPartners] = useState<B2bPartner[]>([]);
+  const [b2bPartners, setB2bPartners] = useState<B2bPartner[]>(() => getB2bPartners());
+  const [installerPartners, setInstallerPartners] = useState<B2bPartner[]>(() => getInstallerPartners());
   const [customers, setCustomers] = useState<Customer[]>([]);
   useEffect(() => {
-    fetchB2bPartners().then(setB2bPartners).catch(console.error);
-    fetchInstallerPartners().then(setInstallerPartners).catch(console.error);
+    fetchB2bPartners().then((res) => { if (res && res.length > 0) setB2bPartners(res); }).catch(console.error);
+    fetchInstallerPartners().then((res) => { if (res && res.length > 0) setInstallerPartners(res); }).catch(console.error);
     fetchCustomers().then(setCustomers).catch(console.error);
   }, []);
 
