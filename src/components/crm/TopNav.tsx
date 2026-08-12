@@ -15,7 +15,7 @@ export function TopNav({ hideSidebarTrigger = false }: { hideSidebarTrigger?: bo
   useEffect(() => setMounted(true), []);
   const isDark = theme === "dark";
   const session = mounted ? getSession() : null;
-  const displayName = session?.name ?? "Solar Admin";
+  const displayName = session?.name ?? "Go Zero Admin";
   const initials = displayName
     .split(" ")
     .map(p => p[0])

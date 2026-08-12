@@ -1103,7 +1103,7 @@ function StockOverviewTab({
 
   const LOCATION_OPTS: { id: LocationFilter; label: string }[] = [
     { id: "godown", label: "Godown" },
-    { id: "installer", label: "Installer" },
+    { id: "installer", label: "Seller" },
   ];
 
   // Installer summary — use all stock records (no partner join needed for totals)
@@ -1134,12 +1134,12 @@ function StockOverviewTab({
         </div>
         <div>
           <p className="text-[11px] font-bold uppercase tracking-widest text-white/70">
-            Installer Dealer Stock
+            Seller Stock
           </p>
           <p className="mt-0.5 text-2xl font-bold text-white">
             {installerTotalUnits.toLocaleString("en-IN")} Units
           </p>
-          <p className="mt-0.5 text-[12px] text-white/70">across all installer dealers</p>
+          <p className="mt-0.5 text-[12px] text-white/70">across all seller partners</p>
         </div>
       </div>
       <div className="grid grid-cols-3 divide-x bg-card">
@@ -1206,7 +1206,7 @@ function StockOverviewTab({
         ))}
       </div>
 
-      {/* ══════════════ INSTALLER DEALER VIEW ══════════════ */}
+      {/* ══════════════ SELLER PARTNER VIEW ══════════════ */}
       {location === "installer" && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -1258,14 +1258,14 @@ function StockOverviewTab({
             </label>
           </div>
 
-          {/* Installer summary hero */}
+          {/* Seller summary hero */}
           {installerSummary}
 
           {installerPartners.length === 0 ? (
             <EmptyState
               icon={Building2}
-              title="No installer partners yet"
-              sub="Add installer dealers to track their stock"
+              title="No seller partners yet"
+              sub="Add seller partners to track their stock"
             />
           ) : (
             installerPartners.map((partner) => {
@@ -2760,136 +2760,259 @@ function SubCategorySubTab({
   );
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   TAB: PRODUCTS (4 sub-tabs: Master → Group → Category → SubCategory)
-══════════════════════════════════════════════════════════════════════════ */
+// TAB: PRODUCTS
+//
+//
 function ProductsTab({
-  masters,
-  groups,
-  cats,
   subs,
-  onAddMaster,
-  onEditMaster,
-  onDeleteMaster,
-  onAddGroup,
-  onEditGroup,
-  onDeleteGroup,
-  onAddCat,
-  onEditCat,
-  onDeleteCat,
+  cats,
   onAddSub,
   onEditSub,
   onDeleteSub,
 }: {
-  masters: Master[];
-  groups: Group[];
+  masters?: Master[];
+  groups?: Group[];
   cats: Category[];
   subs: Subcategory[];
-  onAddMaster: (name: string, unit: string) => void;
-  onEditMaster: (id: string, name: string, unit: string) => void;
-  onDeleteMaster: (id: string) => void;
-  onAddGroup: (masterId: string, name: string) => void;
-  onEditGroup: (id: string, name: string) => void;
-  onDeleteGroup: (id: string) => void;
-  onAddCat: (groupId: string, name: string) => void;
-  onEditCat: (id: string, name: string) => void;
-  onDeleteCat: (id: string) => void;
+  onAddMaster?: (name: string, unit: string) => void;
+  onEditMaster?: (id: string, name: string, unit: string) => void;
+  onDeleteMaster?: (id: string) => void;
+  onAddGroup?: (masterId: string, name: string) => void;
+  onEditGroup?: (id: string, name: string) => void;
+  onDeleteGroup?: (id: string) => void;
+  onAddCat?: (groupId: string, name: string) => void;
+  onEditCat?: (id: string, name: string) => void;
+  onDeleteCat?: (id: string) => void;
   onAddSub: (catId: string, name: string) => void;
   onEditSub: (id: string, name: string) => void;
   onDeleteSub: (id: string) => void;
 }) {
-  const [subTab, setSubTab] = useState<"master" | "group" | "category" | "subcategory">("master");
+  const [search, setSearch] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newProductName, setNewProductName] = useState("");
+  const [selectedCatId, setSelectedCatId] = useState("");
+  const [editingSub, setEditingSub] = useState<Subcategory | null>(null);
+  const [editName, setEditName] = useState("");
 
-  const subTabs = [
-    { id: "master" as const, label: "Master", icon: Boxes },
-    { id: "group" as const, label: "Group", icon: Layers },
-    { id: "category" as const, label: "Category", icon: Tag },
-    { id: "subcategory" as const, label: "SubCategory", icon: Box },
-  ];
+  const defaultCatId = cats[0]?.id ?? "1";
+  const activeCatId = selectedCatId || defaultCatId;
+
+  const filteredSubs = subs.filter((s) =>
+    !search ? true : s.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  function handleSaveNewProduct(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newProductName.trim()) return;
+    onAddSub(activeCatId, newProductName.trim());
+    setNewProductName("");
+    setShowAddModal(false);
+  }
+
+  function handleSaveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingSub || !editName.trim()) return;
+    onEditSub(editingSub.id, editName.trim());
+    setEditingSub(null);
+  }
 
   return (
-    <div className="space-y-5">
-      {/* Sub-tab bar */}
-      <div className="grid grid-cols-4 gap-2">
-        {subTabs.map((t, i) => {
-          const Icon = t.icon;
-          const active = subTab === t.id;
-          const grad = AVATAR_PALETTE[i % AVATAR_PALETTE.length];
-          return (
-            <button
-              key={t.id}
-              onClick={() => setSubTab(t.id)}
-              className={`group relative flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition-all ${
-                active
-                  ? "gradient-primary border-transparent text-white shadow-glow"
-                  : "bg-card text-muted-foreground hover:border-primary/30 hover:bg-primary-soft/20 hover:text-foreground"
-              }`}
-            >
-              <div
-                className={`grid h-9 w-9 place-items-center rounded-xl transition-all ${
-                  active ? "bg-white/20" : `bg-gradient-to-br ${grad} text-white shadow-sm`
-                }`}
-              >
+    <div className="space-y-6">
+      {/* Stat summary cards */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[
+          { label: "Total Products", value: subs.length, color: "text-primary", icon: Boxes },
+          {
+            label: "Total Stock Items",
+            value: subs.reduce((acc, s) => acc + (s.godownStock || 0), 0),
+            color: "text-[oklch(0.5_0.15_240)]",
+            icon: Layers,
+          },
+          { label: "Categories", value: cats.length, color: "text-[oklch(0.45_0.15_145)]", icon: Box },
+        ].map(({ label, value, color, icon: Icon }) => (
+          <div key={label} className="rounded-2xl border bg-card p-5 shadow-card">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {label}
+              </div>
+              <div className={`grid h-8 w-8 place-items-center rounded-lg bg-primary/10 ${color}`}>
                 <Icon className="h-4 w-4" />
               </div>
-              <p className={`text-[13px] font-bold leading-tight ${active ? "text-white" : ""}`}>
-                {t.label}
-              </p>
-              {active && (
-                <span className="absolute bottom-2 left-1/2 h-1 w-6 -translate-x-1/2 rounded-full bg-white/40" />
-              )}
-            </button>
-          );
-        })}
+            </div>
+            <div className={`mt-2 text-2xl font-bold ${color}`}>{value}</div>
+          </div>
+        ))}
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={subTab}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.15 }}
+      {/* Toolbar: Search + Add Product button */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search products by name..."
+            className="h-10 w-full rounded-xl border bg-card pl-10 pr-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+          />
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="shrink-0 inline-flex items-center gap-2 rounded-xl gradient-primary px-5 py-2.5 text-[13px] font-bold text-white shadow-glow hover:opacity-95 transition-opacity"
         >
-          {subTab === "master" && (
-            <MasterSubTab
-              masters={masters}
-              onAdd={onAddMaster}
-              onEdit={onEditMaster}
-              onDelete={onDeleteMaster}
-            />
-          )}
-          {subTab === "group" && (
-            <GroupSubTab
-              masters={masters}
-              groups={groups}
-              onAdd={onAddGroup}
-              onEdit={onEditGroup}
-              onDelete={onDeleteGroup}
-            />
-          )}
-          {subTab === "category" && (
-            <CategorySubTab
-              masters={masters}
-              groups={groups}
-              cats={cats}
-              onAdd={onAddCat}
-              onEdit={onEditCat}
-              onDelete={onDeleteCat}
-            />
-          )}
-          {subTab === "subcategory" && (
-            <SubCategorySubTab
-              masters={masters}
-              groups={groups}
-              cats={cats}
-              subs={subs}
-              onAdd={onAddSub}
-              onEdit={onEditSub}
-              onDelete={onDeleteSub}
-            />
-          )}
-        </motion.div>
+          <Plus className="h-4 w-4" /> Add Product
+        </button>
+      </div>
+
+      {/* Product List Table */}
+      <div className="rounded-2xl border bg-card shadow-card overflow-hidden">
+        <div className="grid grid-cols-[80px_1fr_180px_120px_100px] gap-3 border-b bg-muted/40 px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span>ID</span>
+          <span>Product Name</span>
+          <span>Category</span>
+          <span>Current Stock</span>
+          <span className="text-center">Action</span>
+        </div>
+
+        {filteredSubs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-16 text-muted-foreground">
+            <Boxes className="h-8 w-8 opacity-30" />
+            <p className="text-sm font-medium">No products found</p>
+          </div>
+        ) : (
+          <div className="divide-y">
+            {filteredSubs.map((item, idx) => {
+              const cat = cats.find((c) => c.id === item.categoryId);
+              return (
+                <div
+                  key={item.id}
+                  className="grid grid-cols-[80px_1fr_180px_120px_100px] items-center gap-3 px-5 py-3.5 text-sm transition-colors hover:bg-muted/30"
+                >
+                  <span className="font-mono text-xs text-muted-foreground">#{item.id || idx + 1}</span>
+                  <span className="font-semibold text-foreground">{item.name}</span>
+                  <span className="text-xs text-muted-foreground">{cat?.name ?? "General"}</span>
+                  <div>
+                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
+                      {item.godownStock} NOS
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingSub(item);
+                        setEditName(item.name);
+                      }}
+                      className="grid h-8 w-8 place-items-center rounded-lg border bg-card text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                      title="Edit Product"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => onDeleteSub(item.id)}
+                      className="grid h-8 w-8 place-items-center rounded-lg border bg-card text-muted-foreground hover:border-destructive hover:text-destructive transition-colors"
+                      title="Delete Product"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Simple Add Product Modal */}
+      <AnimatePresence>
+        {showAddModal && (
+          <Modal title="Add New Product" onClose={() => setShowAddModal(false)}>
+            <form onSubmit={handleSaveNewProduct} className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Product Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  required
+                  autoFocus
+                  value={newProductName}
+                  onChange={(e) => setNewProductName(e.target.value)}
+                  placeholder="Enter product name (e.g. 150Ah Solar Battery)"
+                  className="h-10 w-full rounded-xl border bg-muted/40 px-3.5 text-sm outline-none focus:bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+                />
+              </div>
+
+              {cats.length > 0 && (
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Category
+                  </label>
+                  <select
+                    value={activeCatId}
+                    onChange={(e) => setSelectedCatId(e.target.value)}
+                    className="h-10 w-full rounded-xl border bg-muted/40 px-3.5 text-sm outline-none focus:bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 transition cursor-pointer"
+                  >
+                    {cats.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="rounded-xl border px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl gradient-primary px-5 py-2.5 text-xs font-bold text-white shadow-glow hover:opacity-95 transition-opacity"
+                >
+                  Save Product
+                </button>
+              </div>
+            </form>
+          </Modal>
+        )}
+
+        {/* Edit Product Modal */}
+        {editingSub && (
+          <Modal title="Edit Product" onClose={() => setEditingSub(null)}>
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Product Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  required
+                  autoFocus
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="h-10 w-full rounded-xl border bg-muted/40 px-3.5 text-sm outline-none focus:bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setEditingSub(null)}
+                  className="rounded-xl border px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl gradient-primary px-5 py-2.5 text-xs font-bold text-white shadow-glow hover:opacity-95 transition-opacity"
+                >
+                  Update Product
+                </button>
+              </div>
+            </form>
+          </Modal>
+        )}
       </AnimatePresence>
     </div>
   );
@@ -3244,7 +3367,7 @@ function OutwardTab({
                     { value: "__all__", label: "All" },
                     ...deliveryToOptions.map((dt) => ({
                       value: dt,
-                      label: dt === "B2I" ? "Installer" : dt,
+                      label: dt === "B2I" ? "Seller" : dt,
                     })),
                   ]}
                 />
@@ -3858,7 +3981,7 @@ function MovementsTab({
                   options={[
                     { value: "__all__", label: "All" },
                     { value: "b2b", label: "B2B" },
-                    { value: "b2i", label: "Installer" },
+                    { value: "b2i", label: "Seller" },
                   ]}
                 />
               </div>
@@ -5011,7 +5134,7 @@ function B2bForm({
             Inventory / B2B / {initial ? "Edit Partner" : "Create Partner"}
           </p>
           <h2 className="text-[26px] font-bold leading-tight mt-0.5">
-            {initial ? "Edit B2B Partner" : "Create B2B Partner"}
+            {initial ? "Edit Buyer Partner" : "Create Buyer Partner"}
           </h2>
         </div>
         <button
@@ -5145,7 +5268,7 @@ function B2bForm({
   );
 }
 
-/* ── B2B Partners list tab ───────────────────────────────────────────────── */
+/* ── Buyer Partners list tab ───────────────────────────────────────────────── */
 function B2bTab({
   partners,
   onAdd,
@@ -5161,6 +5284,7 @@ function B2bTab({
 }) {
   const [search, setSearch] = useState("");
   const [viewItem, setViewItem] = useState<B2bPartner | null>(null);
+  const [deletingPartner, setDeletingPartner] = useState<B2bPartner | null>(null);
 
   // Refresh from DB each time this tab is shown
   useEffect(() => {
@@ -5249,7 +5373,7 @@ function B2bTab({
           <div className="flex flex-col items-center justify-center gap-2 py-16">
             <Building2 className="h-8 w-8 text-muted-foreground/30" />
             <p className="text-[12px] text-muted-foreground/60">
-              {search ? "No matching partners" : "No B2B partners yet. Click Add Partner."}
+              {search ? "No matching partners" : "No Buyer partners yet. Click Add Partner."}
             </p>
           </div>
         )}
@@ -5292,7 +5416,7 @@ function B2bTab({
                 <Pencil className="h-3.5 w-3.5" />
               </button>
               <button
-                onClick={() => onDelete(p.id)}
+                onClick={() => setDeletingPartner(p)}
                 title="Delete"
                 className="grid h-7 w-7 place-items-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
               >
@@ -5305,8 +5429,80 @@ function B2bTab({
 
       {/* View detail modal */}
       <AnimatePresence>
+                {deletingPartner && (
+          <Modal title="Confirm Delete" onClose={() => setDeletingPartner(null)}>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-3 text-destructive">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-destructive/10">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">Delete Buyer Partner?</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Are you sure you want to delete <strong className="text-foreground">"{deletingPartner.companyName}"</strong>? This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setDeletingPartner(null)}
+                  className="rounded-xl border px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDelete(deletingPartner.id);
+                    setDeletingPartner(null);
+                  }}
+                  className="rounded-xl bg-destructive px-5 py-2.5 text-xs font-bold text-destructive-foreground shadow-sm hover:opacity-90 transition-opacity"
+                >
+                  Delete Partner
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+                {deletingPartner && (
+          <Modal title="Confirm Delete" onClose={() => setDeletingPartner(null)}>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-3 text-destructive">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-destructive/10">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">Delete Seller Partner?</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Are you sure you want to delete <strong className="text-foreground">"{deletingPartner.companyName}"</strong>? This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setDeletingPartner(null)}
+                  className="rounded-xl border px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDelete(deletingPartner.id);
+                    setDeletingPartner(null);
+                  }}
+                  className="rounded-xl bg-destructive px-5 py-2.5 text-xs font-bold text-destructive-foreground shadow-sm hover:opacity-90 transition-opacity"
+                >
+                  Delete Partner
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
         {viewItem && (
-          <Modal title="B2B Partner Details" onClose={() => setViewItem(null)}>
+          <Modal title="Buyer Partner Details" onClose={() => setViewItem(null)}>
             <div className="p-5 space-y-3">
               <div className="flex items-center gap-3 rounded-xl bg-primary-soft px-4 py-3">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/20">
@@ -5345,7 +5541,7 @@ function B2bTab({
   );
 }
 
-/* ── Installer partners list tab ─────────────────────────────────────────────── */
+/* ── Seller partners list tab ─────────────────────────────────────────────── */
 function InstallerTab({
   partners,
   onAdd,
@@ -5361,6 +5557,7 @@ function InstallerTab({
 }) {
   const [search, setSearch] = useState("");
   const [viewItem, setViewItem] = useState<B2bPartner | null>(null);
+  const [deletingPartner, setDeletingPartner] = useState<B2bPartner | null>(null);
 
   // Refresh from DB each time this tab is shown
   useEffect(() => {
@@ -5382,7 +5579,7 @@ function InstallerTab({
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-4">
         {[
-          { label: "Total Installers", value: partners.length, color: "text-primary" },
+          { label: "Total Sellers", value: partners.length, color: "text-primary" },
           {
             label: "States Covered",
             value: new Set(partners.map((p) => p.state)).size,
@@ -5429,7 +5626,7 @@ function InstallerTab({
           onClick={onAdd}
           className="shrink-0 inline-flex items-center gap-2 rounded-xl gradient-primary px-5 py-2.5 text-[13px] font-bold text-white shadow-glow hover:opacity-95 transition-opacity"
         >
-          <Plus className="h-4 w-4" /> Add Installer
+          <Plus className="h-4 w-4" /> Add Seller
         </button>
       </div>
 
@@ -5449,7 +5646,7 @@ function InstallerTab({
           <div className="flex flex-col items-center justify-center gap-2 py-16">
             <Building2 className="h-8 w-8 text-muted-foreground/30" />
             <p className="text-[12px] text-muted-foreground/60">
-              {search ? "No matching installers" : "No installers yet. Click Add Installer."}
+              {search ? "No matching installers" : "No sellers yet. Click Add Seller."}
             </p>
           </div>
         )}
@@ -5507,7 +5704,7 @@ function InstallerTab({
                 <Pencil className="h-3.5 w-3.5" />
               </button>
               <button
-                onClick={() => onDelete(p.id)}
+                onClick={() => setDeletingPartner(p)}
                 title="Delete"
                 className="grid h-7 w-7 place-items-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
               >
@@ -5521,7 +5718,7 @@ function InstallerTab({
       {/* View detail modal */}
       <AnimatePresence>
         {viewItem && (
-          <Modal title="Installer Details" onClose={() => setViewItem(null)}>
+          <Modal title="Seller Details" onClose={() => setViewItem(null)}>
             <div className="p-5 space-y-3">
               <div className="flex items-center gap-3 rounded-xl bg-primary-soft px-4 py-3">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/20">
@@ -5535,7 +5732,7 @@ function InstallerTab({
               <div className="rounded-xl border bg-muted/30 divide-y text-[12px]">
                 {[
                   [
-                    "Installer Type",
+                    "Seller Type",
                     viewItem.installerType === "WIREMAN"
                       ? "Wireman"
                       : viewItem.installerType === "FABRICATOR"
@@ -5707,8 +5904,8 @@ function StorePage() {
 
   const moreTabs = [
     { id: "products", label: "Products", icon: Boxes },
-    { id: "b2b", label: "B2B", icon: Building2 },
-    { id: "installer", label: "Installer", icon: Building2 },
+    { id: "b2b", label: "Buyer", icon: Building2 },
+    { id: "installer", label: "Seller", icon: Building2 },
   ] as const;
 
   const movementTabs = [
@@ -5746,52 +5943,7 @@ function StorePage() {
             })}
           </div>
 
-          <div className="inline-flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  title="More"
-                  className={`grid h-[38px] w-[38px] place-items-center rounded-xl border transition-all ${
-                    moreActive
-                      ? "gradient-primary border-transparent text-white shadow-glow"
-                      : "border-border bg-card text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  <Menu className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {moreTabs.map((t) => {
-                  const Icon = t.icon;
-                  return (
-                    <DropdownMenuItem key={t.id} onClick={() => setTab(t.id)} className="gap-2">
-                      <Icon className="h-3.5 w-3.5" />
-                      {t.label}
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {movementTabs.map((t) => {
-              const Icon = t.icon;
-              const active = activeTab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
-                  className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-[13px] font-semibold transition-all ${
-                    active
-                      ? "gradient-primary border-transparent text-white shadow-glow"
-                      : "border-border bg-card text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
+          
         </div>
 
         {/* Tab content */}

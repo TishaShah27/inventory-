@@ -5,6 +5,11 @@ import {
   LayoutDashboard,
   ChevronDown,
   Leaf,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Boxes,
+  Building2,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -22,7 +27,15 @@ import {
 } from "@/components/ui/sidebar";
 
 const mainMenu = [
-  { title: "Inventory", url: "/inventory", icon: Package },
+  { title: "Inventory", url: "/inventory", search: { tab: "dashboard" }, icon: Package },
+  { title: "Inward", url: "/inventory", search: { tab: "inward" }, icon: ArrowDownToLine },
+  { title: "Outward", url: "/inventory", search: { tab: "outward" }, icon: ArrowUpFromLine },
+];
+
+const managementMenu = [
+  { title: "Products", url: "/inventory", search: { tab: "products" }, icon: Boxes },
+  { title: "Buyer", url: "/inventory", search: { tab: "b2b" }, icon: Building2 },
+  { title: "Seller", url: "/inventory", search: { tab: "installer" }, icon: Users },
 ];
 
 function NavGroup({
@@ -30,13 +43,13 @@ function NavGroup({
   icon: Icon,
   items,
   collapsed,
-  isActive,
+  currentTab,
 }: {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  items: { title: string; url: string; icon: React.ComponentType<{ className?: string }> }[];
+  items: { title: string; url: string; search: { tab: string }; icon: React.ComponentType<{ className?: string }> }[];
   collapsed: boolean;
-  isActive: (url: string) => boolean;
+  currentTab: string;
 }) {
   const [open, setOpen] = useState(true);
 
@@ -62,22 +75,25 @@ function NavGroup({
                   "relative mt-1 pl-[35px] before:absolute before:inset-y-0 before:left-[19px] before:w-px before:bg-sidebar-border before:content-['']",
               )}
             >
-              {items.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                    className="h-10 rounded-lg data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:font-semibold data-[active=true]:hover:bg-primary data-[active=true]:hover:text-primary-foreground"
-                  >
-                    <Link to="/inventory" search={{ tab: 'dashboard' }}>
-                      {!collapsed && <span className="h-px w-2.5 shrink-0 bg-current opacity-30" />}
-                      <item.icon className="h-[18px] w-[18px]" />
-                      <span className="font-medium">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const isActive = currentTab === item.search.tab;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.title}
+                      className="h-10 rounded-lg data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:font-semibold data-[active=true]:hover:bg-primary data-[active=true]:hover:text-primary-foreground"
+                    >
+                      <Link to={item.url as any} search={item.search as any}>
+                        {!collapsed && <span className="h-px w-2.5 shrink-0 bg-current opacity-30" />}
+                        <item.icon className="h-[18px] w-[18px]" />
+                        <span className="font-medium">{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </CollapsibleContent>
@@ -89,8 +105,8 @@ function NavGroup({
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const path = useRouterState({ select: (r) => r.location.pathname });
-  const isActive = (url: string) => (url === "/" ? path === "/" : path.startsWith(url));
+  const search = useRouterState({ select: (r) => r.location.search }) as { tab?: string };
+  const currentTab = search?.tab || "dashboard";
 
   return (
     <Sidebar collapsible="icon" className="border-r">
@@ -101,7 +117,7 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="leading-tight">
-              <div className="text-[15px] font-semibold tracking-tight">Aris Solar</div>
+              <div className="text-[15px] font-semibold tracking-tight">Go Zero</div>
               <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
                 Inventory Suite
               </div>
@@ -110,13 +126,20 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="px-2">
+      <SidebarContent className="px-2 space-y-1">
         <NavGroup
           label="Main Menu"
           icon={LayoutDashboard}
           items={mainMenu}
           collapsed={collapsed}
-          isActive={isActive}
+          currentTab={currentTab}
+        />
+        <NavGroup
+          label="Masters & Partners"
+          icon={Boxes}
+          items={managementMenu}
+          collapsed={collapsed}
+          currentTab={currentTab}
         />
       </SidebarContent>
     </Sidebar>
