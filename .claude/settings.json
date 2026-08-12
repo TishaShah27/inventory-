@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-Content \"h:\\\\Vrushali ITM\\\\Solar Company\\\\src\\\\routes\\\\__root.tsx\")",
+      "Bash(grep -n \"<select\" \"h:/Vrushali ITM/Solar Company/src/routes/customers.tsx\" \"h:/Vrushali ITM/Solar Company/src/routes/customers_.\\\\$id.tsx\" 2>&1)",
+      "Read(//h/Vrushali ITM/Solar Company/src/routes/**)",
+      "Bash(npx tsr *)",
+      "Bash(npx @tanstack/router-cli generate)",
+      "Bash(git pull *)",
+      "Bash(node -e \"console.log\\(require.resolve\\('xlsx'\\)\\)\")"
+    ]
+  }
+}
