@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Check, ChevronRight, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/crm/PageHeader";
 import { fetchInstallerById, updateInstallerPartner } from "@/lib/installerService";
-import type { B2bPartner, InstallerType } from "@/data/inventoryStore";
+import type { B2bPartner } from "@/data/inventoryStore";
 
 export const Route = createFileRoute("/inventory_/installer/$id")({ component: EditInstallerPage });
 
@@ -62,7 +62,7 @@ function EditInstallerPage() {
   const [state, setState] = useState("");
   const [pincode, setPincode] = useState("");
   const [contact, setContact] = useState("");
-  const [installerType, setInstallerType] = useState<InstallerType | "">("");
+  
 
   useEffect(() => {
     fetchInstallerById(id).then((p) => {
@@ -75,7 +75,7 @@ function EditInstallerPage() {
         setState(p.state);
         setPincode(p.pincode);
         setContact(p.contact);
-        setInstallerType(p.installerType ?? "");
+        
       }
       setLoading(false);
     });
@@ -89,8 +89,8 @@ function EditInstallerPage() {
     city.trim() &&
     state &&
     pincode.trim() &&
-    contact.trim() &&
-    installerType;
+    contact.trim();
+    
 
   if (loading) {
     return (
@@ -127,7 +127,7 @@ function EditInstallerPage() {
         state,
         pincode: pincode.trim(),
         contact: contact.trim(),
-        installerType: installerType || undefined,
+        
       });
       navigate({ to: "/inventory", search: { tab: "installer" } });
     } catch {
@@ -163,125 +163,7 @@ function EditInstallerPage() {
         </div>
         <div className="p-6 space-y-5">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                Company Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="e.g. SURYATECH SOLAR INSTALLERS"
-                className={inputCls}
-                autoComplete="off"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                Address <span className="text-red-500">*</span>
-              </label>
-              <input
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Street / Area"
-                className={inputCls}
-                autoComplete="off"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                City <span className="text-red-500">*</span>
-              </label>
-              <input
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="City"
-                className={inputCls}
-                autoComplete="off"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                GSTIN <span className="text-red-500">*</span>
-              </label>
-              <input
-                value={gstin}
-                onChange={(e) => setGstin(e.target.value.toUpperCase())}
-                placeholder="e.g. 24AAACW0395M1ZA"
-                className={inputCls + " font-mono"}
-                maxLength={15}
-                autoComplete="off"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                State <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                className={selectCls}
-                autoComplete="off"
-              >
-                <option value="">Select State…</option>
-                {INDIAN_STATES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                Pincode <span className="text-red-500">*</span>
-              </label>
-              <input
-                value={pincode}
-                onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="6-digit pincode"
-                className={inputCls}
-                maxLength={6}
-                autoComplete="off"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                Contact No. <span className="text-red-500">*</span>
-              </label>
-              <input
-                value={contact}
-                onChange={(e) => setContact(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                placeholder="10-digit mobile"
-                className={inputCls}
-                maxLength={10}
-                autoComplete="off"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                Installer Type <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2 pt-1">
-                {(
-                  [
-                    { label: "Wireman", val: "WIREMAN" },
-                    { label: "Fabricator", val: "FABRICATOR" },
-                  ] as const
-                ).map((opt) => (
-                  <button
-                    key={opt.val}
-                    type="button"
-                    onClick={() => setInstallerType(opt.val)}
-                    className={`flex-1 rounded-xl border py-2 text-xs font-semibold transition-all ${
-                      installerType === opt.val
-                        ? "gradient-primary text-white border-transparent shadow-glow"
-                        : "bg-muted/60 text-muted-foreground border-border hover:bg-muted"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            
           </div>
 
           {error && (

@@ -7,7 +7,7 @@ create table if not exists b2i_partner_inventory (
   id               bigint  generated always as identity primary key,
   b2i_partner_id   text    not null,
   b2i_partner_name text    not null default '',
-  subcategory_id   bigint  not null references inventory_subcategories(id) on delete cascade,
+  subcategory_id   bigint  not null references inventory_products(id) on delete cascade,
   qty              integer not null default 0,
   updated_at       timestamptz not null default now()
 );

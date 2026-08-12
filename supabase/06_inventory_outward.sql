@@ -18,7 +18,7 @@ create table if not exists inventory_outward (
   remarks          text        not null default '',
   vehicle_no       text        not null default '',
   delivery_contact text        not null default '',
-  subcategory_id   bigint      not null references inventory_subcategories(id),
+  subcategory_id   bigint      not null references inventory_products(id),
   qty              integer     not null default 0,
   serial_nos       text[]      not null default '{}',
   created_at       timestamptz not null default now()

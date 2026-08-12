@@ -131,7 +131,7 @@ type B2bPartner = {
   state: string;
   pincode: string;
   contact: string;
-  installerType?: "WIREMAN" | "FABRICATOR";
+  
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -2765,14 +2765,13 @@ function SubCategorySubTab({
 //
 function ProductsTab({
   subs,
-  cats,
   onAddSub,
   onEditSub,
   onDeleteSub,
 }: {
   masters?: Master[];
   groups?: Group[];
-  cats: Category[];
+  cats?: Category[];
   subs: Subcategory[];
   onAddMaster?: (name: string, unit: string) => void;
   onEditMaster?: (id: string, name: string, unit: string) => void;
@@ -2790,12 +2789,10 @@ function ProductsTab({
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [newProductName, setNewProductName] = useState("");
-  const [selectedCatId, setSelectedCatId] = useState("");
   const [editingSub, setEditingSub] = useState<Subcategory | null>(null);
   const [editName, setEditName] = useState("");
-
-  const defaultCatId = cats[0]?.id ?? "1";
-  const activeCatId = selectedCatId || defaultCatId;
+  const [viewingSub, setViewingSub] = useState<Subcategory | null>(null);
+  const [deletingSub, setDeletingSub] = useState<Subcategory | null>(null);
 
   const filteredSubs = subs.filter((s) =>
     !search ? true : s.name.toLowerCase().includes(search.toLowerCase())
@@ -2804,7 +2801,7 @@ function ProductsTab({
   function handleSaveNewProduct(e: React.FormEvent) {
     e.preventDefault();
     if (!newProductName.trim()) return;
-    onAddSub(activeCatId, newProductName.trim());
+    onAddSub("1", newProductName.trim());
     setNewProductName("");
     setShowAddModal(false);
   }
@@ -2816,32 +2813,25 @@ function ProductsTab({
     setEditingSub(null);
   }
 
+  function handleConfirmDelete() {
+    if (!deletingSub) return;
+    onDeleteSub(deletingSub.id);
+    setDeletingSub(null);
+  }
+
   return (
     <div className="space-y-6">
-      {/* Stat summary cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {[
-          { label: "Total Products", value: subs.length, color: "text-primary", icon: Boxes },
-          {
-            label: "Total Stock Items",
-            value: subs.reduce((acc, s) => acc + (s.godownStock || 0), 0),
-            color: "text-[oklch(0.5_0.15_240)]",
-            icon: Layers,
-          },
-          { label: "Categories", value: cats.length, color: "text-[oklch(0.45_0.15_145)]", icon: Box },
-        ].map(({ label, value, color, icon: Icon }) => (
-          <div key={label} className="rounded-2xl border bg-card p-5 shadow-card">
-            <div className="flex items-center justify-between">
-              <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {label}
-              </div>
-              <div className={`grid h-8 w-8 place-items-center rounded-lg bg-primary/10 ${color}`}>
-                <Icon className="h-4 w-4" />
-              </div>
-            </div>
-            <div className={`mt-2 text-2xl font-bold ${color}`}>{value}</div>
+      {/* Stat summary card */}
+      <div className="rounded-2xl border bg-card p-5 shadow-card max-w-xs">
+        <div className="flex items-center justify-between">
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Total Products
           </div>
-        ))}
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
+            <Boxes className="h-4 w-4" />
+          </div>
+        </div>
+        <div className="mt-2 text-2xl font-bold text-primary">{subs.length}</div>
       </div>
 
       {/* Toolbar: Search + Add Product button */}
@@ -2865,11 +2855,9 @@ function ProductsTab({
 
       {/* Product List Table */}
       <div className="rounded-2xl border bg-card shadow-card overflow-hidden">
-        <div className="grid grid-cols-[80px_1fr_180px_120px_100px] gap-3 border-b bg-muted/40 px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        <div className="grid grid-cols-[80px_1fr_120px] gap-3 border-b bg-muted/40 px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
           <span>ID</span>
           <span>Product Name</span>
-          <span>Category</span>
-          <span>Current Stock</span>
           <span className="text-center">Action</span>
         </div>
 
@@ -2880,49 +2868,48 @@ function ProductsTab({
           </div>
         ) : (
           <div className="divide-y">
-            {filteredSubs.map((item, idx) => {
-              const cat = cats.find((c) => c.id === item.categoryId);
-              return (
-                <div
-                  key={item.id}
-                  className="grid grid-cols-[80px_1fr_180px_120px_100px] items-center gap-3 px-5 py-3.5 text-sm transition-colors hover:bg-muted/30"
-                >
-                  <span className="font-mono text-xs text-muted-foreground">#{item.id || idx + 1}</span>
-                  <span className="font-semibold text-foreground">{item.name}</span>
-                  <span className="text-xs text-muted-foreground">{cat?.name ?? "General"}</span>
-                  <div>
-                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
-                      {item.godownStock} NOS
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => {
-                        setEditingSub(item);
-                        setEditName(item.name);
-                      }}
-                      className="grid h-8 w-8 place-items-center rounded-lg border bg-card text-muted-foreground hover:border-primary hover:text-primary transition-colors"
-                      title="Edit Product"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => onDeleteSub(item.id)}
-                      className="grid h-8 w-8 place-items-center rounded-lg border bg-card text-muted-foreground hover:border-destructive hover:text-destructive transition-colors"
-                      title="Delete Product"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+            {filteredSubs.map((item, idx) => (
+              <div
+                key={item.id}
+                className="grid grid-cols-[80px_1fr_120px] items-center gap-3 px-5 py-3.5 text-sm transition-colors hover:bg-muted/30"
+              >
+                <span className="font-mono text-xs text-muted-foreground">#{item.id || idx + 1}</span>
+                <span className="font-semibold text-foreground">{item.name}</span>
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => setViewingSub(item)}
+                    className="grid h-8 w-8 place-items-center rounded-lg border bg-card text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                    title="View Product"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingSub(item);
+                      setEditName(item.name);
+                    }}
+                    className="grid h-8 w-8 place-items-center rounded-lg border bg-card text-muted-foreground hover:border-amber-500 hover:text-amber-500 transition-colors"
+                    title="Edit Product"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setDeletingSub(item)}
+                    className="grid h-8 w-8 place-items-center rounded-lg border bg-card text-muted-foreground hover:border-destructive hover:text-destructive transition-colors"
+                    title="Delete Product"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
       </div>
 
-      {/* Simple Add Product Modal */}
+      {/* Modals */}
       <AnimatePresence>
+        {/* Add Product Modal */}
         {showAddModal && (
           <Modal title="Add New Product" onClose={() => setShowAddModal(false)}>
             <form onSubmit={handleSaveNewProduct} className="p-6 space-y-4">
@@ -2935,29 +2922,10 @@ function ProductsTab({
                   autoFocus
                   value={newProductName}
                   onChange={(e) => setNewProductName(e.target.value)}
-                  placeholder="Enter product name (e.g. 150Ah Solar Battery)"
+                  placeholder="Enter product name"
                   className="h-10 w-full rounded-xl border bg-muted/40 px-3.5 text-sm outline-none focus:bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
                 />
               </div>
-
-              {cats.length > 0 && (
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Category
-                  </label>
-                  <select
-                    value={activeCatId}
-                    onChange={(e) => setSelectedCatId(e.target.value)}
-                    className="h-10 w-full rounded-xl border bg-muted/40 px-3.5 text-sm outline-none focus:bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 transition cursor-pointer"
-                  >
-                    {cats.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t">
                 <button
@@ -2975,6 +2943,34 @@ function ProductsTab({
                 </button>
               </div>
             </form>
+          </Modal>
+        )}
+
+        {/* View Product Details Modal */}
+        {viewingSub && (
+          <Modal title="Product Details" onClose={() => setViewingSub(null)}>
+            <div className="p-6 space-y-4">
+              <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">Product ID</span>
+                  <span className="font-mono text-xs font-bold text-foreground">#{viewingSub.id}</span>
+                </div>
+                <div className="flex items-center justify-between border-t pt-3">
+                  <span className="text-xs font-medium text-muted-foreground">Product Name</span>
+                  <span className="text-sm font-bold text-foreground">{viewingSub.name}</span>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setViewingSub(null)}
+                  className="rounded-xl border px-5 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </Modal>
         )}
 
@@ -3011,6 +3007,34 @@ function ProductsTab({
                 </button>
               </div>
             </form>
+          </Modal>
+        )}
+
+        {/* Confirm Delete Product Modal */}
+        {deletingSub && (
+          <Modal title="Delete Product" onClose={() => setDeletingSub(null)}>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Are you sure you want to delete product{" "}
+                <span className="font-bold text-foreground">"{deletingSub.name}"</span>? This action cannot be undone.
+              </p>
+              <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setDeletingSub(null)}
+                  className="rounded-xl border px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  className="rounded-xl bg-destructive px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:opacity-90 transition-opacity"
+                >
+                  Confirm Delete
+                </button>
+              </div>
+            </div>
           </Modal>
         )}
       </AnimatePresence>
@@ -5632,7 +5656,7 @@ function InstallerTab({
 
       {/* Table */}
       <div className="rounded-2xl border bg-card shadow-card overflow-hidden">
-        <div className="grid grid-cols-[48px_1fr_160px_110px_1fr_100px_110px] gap-3 border-b bg-muted/40 px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        <div className="grid grid-cols-[48px_1fr_160px_1fr_100px_110px] gap-3 border-b bg-muted/40 px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
           <span>ID</span>
           <span>Company Name</span>
           <span>GSTIN</span>
@@ -5654,7 +5678,7 @@ function InstallerTab({
         {filtered.map((p, i) => (
           <div
             key={p.id}
-            className="grid grid-cols-[48px_1fr_160px_110px_1fr_100px_110px] gap-3 items-center border-b px-5 py-3.5 hover:bg-muted/20 transition-colors"
+            className="grid grid-cols-[48px_1fr_160px_1fr_100px_110px] gap-3 items-center border-b px-5 py-3.5 hover:bg-muted/20 transition-colors"
           >
             <span className="text-[12px] font-bold text-muted-foreground">{i + 1}</span>
             <div className="min-w-0">
@@ -5665,21 +5689,7 @@ function InstallerTab({
               </p>
             </div>
             <span className="font-mono text-[11px] text-muted-foreground">{p.gstin || "—"}</span>
-            <span
-              className={`w-fit rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
-                p.installerType === "WIREMAN"
-                  ? "bg-sky-50 text-sky-700"
-                  : p.installerType === "FABRICATOR"
-                    ? "bg-amber-50 text-amber-700"
-                    : "text-muted-foreground"
-              }`}
-            >
-              {p.installerType
-                ? p.installerType === "WIREMAN"
-                  ? "Wireman"
-                  : "Fabricator"
-                : "—"}
-            </span>
+            
             <div className="min-w-0">
               <p className="text-[11px] truncate text-muted-foreground">{p.address}</p>
               <p className="text-[11px] text-muted-foreground flex items-center gap-1 truncate">
@@ -5731,14 +5741,7 @@ function InstallerTab({
               </div>
               <div className="rounded-xl border bg-muted/30 divide-y text-[12px]">
                 {[
-                  [
-                    "Seller Type",
-                    viewItem.installerType === "WIREMAN"
-                      ? "Wireman"
-                      : viewItem.installerType === "FABRICATOR"
-                        ? "Fabricator"
-                        : "—",
-                  ],
+                  
                   ["Address", viewItem.address],
                   ["City", viewItem.city],
                   ["State", viewItem.state],

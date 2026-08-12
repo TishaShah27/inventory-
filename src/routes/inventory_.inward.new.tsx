@@ -282,7 +282,7 @@ function NewInwardPage() {
                     <span
                       className={`text-[11px] font-semibold ${supplierType === type ? "text-primary" : "text-muted-foreground"}`}
                     >
-                      {type === "b2i" ? "INSTALLER" : type.toUpperCase()}
+                      {type === "b2i" ? "SELLER" : "BUYER"}
                     </span>
                   </label>
                 ))}
@@ -293,7 +293,7 @@ function NewInwardPage() {
                 className={selectCls}
               >
                 <option value="">
-                  Select {supplierType === "b2i" ? "INSTALLER" : supplierType.toUpperCase()}…
+                  Select {supplierType === "b2i" ? "SELLER" : "BUYER"}…
                 </option>
                 {partnerList.map((p) => (
                   <option key={p.id} value={p.companyName}>

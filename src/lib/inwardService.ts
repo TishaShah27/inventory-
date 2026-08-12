@@ -52,7 +52,7 @@ export async function createInwardEntry(
   if (insErr) throw insErr;
 
   const { data: sub, error: fetchErr } = await supabase
-    .from("inventory_subcategories")
+    .from("inventory_products")
     .select("godown_stock")
     .eq("id", Number(e.subcategoryId))
     .single();
@@ -60,7 +60,7 @@ export async function createInwardEntry(
 
   // Inward always adds to godown (godown perspective)
   const { error: updErr } = await supabase
-    .from("inventory_subcategories")
+    .from("inventory_products")
     .update({ godown_stock: (sub?.godown_stock ?? 0) + e.qty })
     .eq("id", Number(e.subcategoryId));
   if (updErr) throw updErr;

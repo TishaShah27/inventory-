@@ -61,9 +61,9 @@ function AddB2bPage() {
       className="space-y-6">
 
       <PageHeader
-        eyebrow="Inventory / B2B"
-        title="Add B2B Partner"
-        description="Add a new supplier or B2B partner to the inventory."
+        eyebrow="Inventory / Buyer"
+        title="Add Buyer"
+        description="Add a new buyer partner to the inventory."
         actions={
           <button onClick={() => navigate({ to: "/inventory", search: { tab: "b2b" } })}
             className="inline-flex items-center gap-2 rounded-xl border bg-card px-4 py-2.5 text-[13px] font-semibold text-muted-foreground shadow-card hover:bg-muted transition-colors">
@@ -74,7 +74,7 @@ function AddB2bPage() {
 
       <div className="rounded-2xl border bg-card shadow-card overflow-hidden">
         <div className="gradient-primary px-6 py-3">
-          <p className="text-[13px] font-bold text-white">Partner Details</p>
+          <p className="text-[13px] font-bold text-white">Buyer Details</p>
         </div>
         <div className="p-6 space-y-5">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

@@ -33,7 +33,7 @@ export async function fetchAllInventory() {
     supabase.from("inventory_masters").select("*").order("id", { ascending: true }),
     supabase.from("inventory_groups").select("*").order("id", { ascending: true }),
     supabase.from("inventory_categories").select("*").order("id", { ascending: true }),
-    supabase.from("inventory_subcategories").select("*").order("id", { ascending: true }),
+    supabase.from("inventory_products").select("*").order("id", { ascending: true }),
   ]);
 
   if (mastersRes.error) throw mastersRes.error;
@@ -96,20 +96,20 @@ export async function deleteCategory(id: string): Promise<void> {
 
 export async function createSubcategory(categoryId: string, name: string): Promise<void> {
   const { error } = await supabase
-    .from("inventory_subcategories")
-    .insert({ category_id: categoryId, name, godown_stock: 0 });
+    .from("inventory_products")
+    .insert({ name });
   if (error) throw error;
 }
 
 export async function updateSubcategory(id: string, name: string): Promise<void> {
   const { error } = await supabase
-    .from("inventory_subcategories")
+    .from("inventory_products")
     .update({ name })
     .eq("id", id);
   if (error) throw error;
 }
 
 export async function deleteSubcategory(id: string): Promise<void> {
-  const { error } = await supabase.from("inventory_subcategories").delete().eq("id", id);
+  const { error } = await supabase.from("inventory_products").delete().eq("id", id);
   if (error) throw error;
 }
